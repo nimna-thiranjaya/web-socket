@@ -29,16 +29,19 @@ UserRouter.post("/login", async (req, res) => {
   if (user) {
     if (user.password === body.password) {
       res.send({
+        status: true,
         message: "Login Success",
         data: user,
       });
     } else {
       res.status(401).send({
+        status: false,
         message: "Invalid Password",
       });
     }
   } else {
     res.status(401).send({
+      status: false,
       message: "Invalid Username",
     });
   }
