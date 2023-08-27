@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import {
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,22 +14,27 @@ const baseUrl = "http://192.168.1.8:3001";
 const socket = io.connect(baseUrl);
 
 export default function App() {
-  const [roomID, setRoomID] = useState("");
+  const [room, setRoom] = useState("");
   const [messages, setMessages] = useState("");
+  const [messageList, setMessageList] = useState("");
 
   const sendMessage = () => {
-    socket.emit("send_message", { messages, roomID });
+    // console.log("Sed data : ", { messages, room });
+    socket.emit("send_message", { messages, room });
   };
 
   const joinRoom = () => {
-    socket.emit("join_room", roomID);
+    socket.emit("join_room", room);
   };
 
   useEffect(() => {
     socket.on("receive_message", (data) => {
-      console.log("Hi");
+      // console.log(data);
+      setMessageList(data.messages);
     });
   }, []);
+
+  console.log("Message List : ", messageList);
   return (
     <View style={styles.container}>
       <View style={{ flexDirection: "row" }}>
@@ -40,7 +46,7 @@ export default function App() {
             width: "60%",
           }}
           placeholder="Room ID"
-          onChangeText={(text) => setRoomID(text)}
+          onChangeText={(text) => setRoom(text)}
         />
         <TouchableOpacity
           style={{
@@ -78,6 +84,17 @@ export default function App() {
         >
           <Text style={{ color: "white" }}>Send</Text>
         </TouchableOpacity>
+      </View>
+      <View>
+        <ScrollView
+          style={{
+            backgroundColor: "#ccc",
+            height: 300,
+            width: "80%",
+          }}
+        >
+          <Text>{messageList}</Text>
+        </ScrollView>
       </View>
     </View>
   );

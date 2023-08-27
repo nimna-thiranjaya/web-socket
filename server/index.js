@@ -18,16 +18,14 @@ const io = require("socket.io")(server, {
 });
 
 io.on("connection", (socket) => {
-  // console.log("Socket ID : ", socket.id);
+  console.log("Socket ID : ", socket.id);
 
   socket.on("join_room", (data) => {
-    console.log("Room ID : ", data);
     socket.join(data);
-    console.log("User Joined Room : ", data);
   });
 
   socket.on("send_message", (data) => {
-    console.log(data);
-    socket.to(data.roomID).emit("receive_message", data.content);
+    // console.log(data);
+    socket.to(data.room).emit("receive_message", data);
   });
 });
