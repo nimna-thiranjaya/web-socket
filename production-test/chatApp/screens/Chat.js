@@ -51,7 +51,6 @@ const Chat = (props) => {
 
       socket.on("receive_message", (messageReceived) => {
         console.log("Message Received : ", messageReceived);
-
         setMessages((messages) => [...messages, messageReceived]);
       });
     });
@@ -145,7 +144,6 @@ const Chat = (props) => {
                 backgroundColor: message.sender === user ? "blue" : "#ccc",
                 padding: 10,
               }}
-              key={message._id}
             >
               <Text
                 style={{
