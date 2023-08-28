@@ -29,14 +29,28 @@ const io = require("socket.io")(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("Socket ID : ", socket.id);
+  console.log("Connected to socket.io");
 
-  socket.on("join_room", (data) => {
-    socket.join(data);
+  socket.on("setup", (userData) => {
+    socket.join(userData);
+    socket.emit("connected");
+  });
+
+  socket.on("join_room", (room) => {
+    socket.join(room);
+    console.log("Joined Room : ", room);
   });
 
   socket.on("send_message", (data) => {
-    // console.log(data);
-    socket.to(data.room).emit("receive_message", data);
+    socket.to(data.conversationId).emit("receive_message", data);
   });
 });
+
+// socket.on("join_room", (data) => {
+//   socket.join(data);
+// });
+
+// socket.on("send_message", (data) => {
+//   // console.log(data);
+//   socket.to(data.room).emit("receive_message", data);
+// });

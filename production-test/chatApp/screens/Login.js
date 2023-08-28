@@ -1,7 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/core";
-import { AsyncStorage } from "react-native";
 import {
   ScrollView,
   StyleSheet,
@@ -10,11 +9,21 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    AsyncStorage.getItem("user").then((res) => {
+      console.log("User Data : ", res);
+      if (res) {
+        navigation.navigate("conversation");
+      }
+    });
+  }, []);
 
   const Login = async () => {
     if (username == "" || password == "") {
@@ -29,8 +38,9 @@ const Login = () => {
       })
       .then((res) => {
         // console.log("Login Data : ", res.data.data._id);
-        // AsyncStorage.setItem("user", JSON.stringify(res.data.data._id));
-
+        AsyncStorage.setItem("user", JSON.stringify(res.data.data._id));
+        console.log("Login Data : ", res);
+        // AsyncStorage.setItem("user", JSON.stringify(res.data.data));
         alert(res.data.message);
         navigation.navigate("conversation");
       })

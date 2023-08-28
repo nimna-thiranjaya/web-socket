@@ -7,23 +7,79 @@ import {
   ScrollView,
 } from "react-native";
 import { useEffect, useState } from "react";
-const messages = [
-  {
-    _id: "60f3f1b0e6c3a1b4b4f7e0b1",
-    message: "Hello",
-  },
-  {
-    _id: "60f3f1b0e6c3a1b4b4f7e0b2",
-    message: "Hi",
-  },
-];
+import io from "socket.io-client";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+const ENDPOINT = "http://192.168.1.8:3001";
 
+var socket, selectedChatCompare;
 const Chat = (props) => {
   const [conversationId, setConversationId] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [user, setUser] = useState(null);
+  const [message, setMessage] = useState("");
+  const getMessages = async () => {
+    await axios
+      .get(`/message/${props.route.params.conversationId}`)
+      .then((res) => {
+        setMessages(res.data.data);
+        socket.emit("join_room", props.route.params.conversationId);
+      })
+      .catch((err) => {
+        alert(err.response.data.message);
+      });
+  };
 
   useEffect(() => {
     setConversationId(props.route.params.conversationId);
+    getMessages();
+
+    selectedChatCompare = props.route.params.conversationId;
+  }, [props.route.params.conversationId]);
+
+  useEffect(() => {
+    AsyncStorage.getItem("user").then((res) => {
+      setUser(JSON.parse(res));
+      // console.log("User Data : ", user);
+
+      socket = io(ENDPOINT);
+      socket.emit("setup", res);
+      socket.on("connection", () => {
+        setSocketConnected(true);
+      });
+
+      socket.on("receive_message", (messageReceived) => {
+        console.log("Message Received : ", messageReceived);
+
+        setMessages((messages) => [...messages, messageReceived]);
+      });
+    });
   }, []);
+
+  useEffect(() => {});
+
+  const sendMessage = async () => {
+    console.log("Message : ", message);
+    if (message == "") {
+      alert("Please type message");
+      return;
+    }
+
+    await axios
+      .post("/message/send", {
+        conversationId,
+        sender: user,
+        text: message,
+      })
+      .then((res) => {
+        socket.emit("send_message", res.data.data);
+        setMessage("");
+      })
+      .catch((err) => {
+        alert(err.response.data.message);
+      });
+  };
 
   return (
     <View style={styles.container}>
@@ -46,6 +102,7 @@ const Chat = (props) => {
             borderRadius: 10,
             padding: 10,
           }}
+          onChangeText={(text) => setMessage(text)}
           placeholder="Type Message"
         />
         <TouchableOpacity
@@ -58,6 +115,7 @@ const Chat = (props) => {
             marginLeft: 10,
             borderRadius: 10,
           }}
+          onPress={sendMessage}
         >
           <Text style={{ color: "white" }}>Send</Text>
         </TouchableOpacity>
@@ -72,7 +130,7 @@ const Chat = (props) => {
       >
         <ScrollView
           style={{
-            height: 300,
+            height: "100%",
             width: "90%",
           }}
         >
@@ -84,11 +142,20 @@ const Chat = (props) => {
                 width: "100%",
                 marginTop: 10,
                 justifyContent: "center",
-                backgroundColor: "#ccc",
+                backgroundColor: message.sender === user ? "blue" : "#ccc",
                 padding: 10,
               }}
+              key={message._id}
             >
-              <Text>{message.message}</Text>
+              <Text
+                style={{
+                  textAlign: message.sender === user ? "right" : "left",
+                  color: message.sender === user ? "white" : "black",
+                  fontWeight: "bold",
+                }}
+              >
+                {message.text}
+              </Text>
             </View>
           ))}
         </ScrollView>
@@ -97,6 +164,9 @@ const Chat = (props) => {
   );
 };
 
+{
+  /*  */
+}
 export default Chat;
 
 const styles = StyleSheet.create({
