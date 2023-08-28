@@ -50,8 +50,13 @@ const Chat = (props) => {
       });
 
       socket.on("receive_message", (messageReceived) => {
-        console.log("Message Received : ", messageReceived);
-        setMessages((messages) => [...messages, messageReceived]);
+        if (
+          messageReceived.conversationId != props.route.params.conversationId
+        ) {
+          return;
+        } else {
+          setMessages([...messages, messageReceived]);
+        }
       });
     });
   }, []);
@@ -59,7 +64,7 @@ const Chat = (props) => {
   useEffect(() => {});
 
   const sendMessage = async () => {
-    console.log("Message : ", message);
+    // console.log("Message : ", message);
     if (message == "") {
       alert("Please type message");
       return;
@@ -73,6 +78,7 @@ const Chat = (props) => {
       })
       .then((res) => {
         socket.emit("send_message", res.data.data);
+        setMessages([...messages, res.data.data]);
         setMessage("");
       })
       .catch((err) => {
